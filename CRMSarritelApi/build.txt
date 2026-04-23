@@ -1,0 +1,12 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  CRMSarritel.Shared -> C:\Users\naata\OneDrive\Escritorio\CRMSarritelSolution\CRMSarritel.Shared\bin\Debug\net10.0\CRMSarritel.Shared.dll
+C:\Users\naata\OneDrive\Escritorio\CRMSarritelSolution\crmsarritelapi\TestDB.cs(8,1): error CS8802: Solo una unidad de compilaci├│n puede tener instrucciones de nivel superior. [C:\Users\naata\OneDrive\Escritorio\CRMSarritelSolution\crmsarritelapi\CRMSarritelApi.csproj]
+
+ERROR al compilar.
+
+C:\Users\naata\OneDrive\Escritorio\CRMSarritelSolution\crmsarritelapi\TestDB.cs(8,1): error CS8802: Solo una unidad de compilaci├│n puede tener instrucciones de nivel superior. [C:\Users\naata\OneDrive\Escritorio\CRMSarritelSolution\crmsarritelapi\CRMSarritelApi.csproj]
+    0 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:06.87

@@ -1,0 +1,227 @@
+﻿@inherits MudBlazor.MudDialog
+@using MudBlazor
+@using CRMSarritel.Shared.Models  // Ajusta según tu namespace
+@using CRMSarritel.Shared.Models.DTO
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">Registro de Usuario</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" Class="mx-auto my-4" />
+        }
+        else
+        {
+            <MudForm @ref="form" @bind-IsValid="@isValid" @bind-Errors="@errors">
+                <!-- Nombre de usuario -->
+                <MudTextField @bind-Value="usuario.Username"
+                              For="@(() => usuario.Username)"
+                              Label="Nombre de usuario"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="El nombre de usuario es obligatorio"
+                              Immediate="true"
+                              HelperText="Por favor, ingresa tu nombre de usuario." />
+
+                <!-- Nombre completo -->
+                <MudTextField @bind-Value="usuario.Nombre"
+                              Label="Nombre completo"
+                              Variant="Variant.Outlined"
+                              Immediate="true"
+                              HelperText="Tu nombre completo (opcional)."
+                              Class="mt-4" />
+
+                <!-- Email -->
+                <MudTextField @bind-Value="usuario.Email"
+                              For="@(() => usuario.Email)"
+                              Label="Correo Electrónico"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="El correo es obligatorio"
+                              InputType="InputType.Email"
+                              Immediate="true"
+                              HelperText="Por favor, ingresa un correo válido."
+                              Class="mt-4" />
+
+                <!-- Contraseña con toggle -->
+                <MudTextField @bind-Value="usuario.Password"
+                              For="@(() => usuario.Password)"
+                              Label="Contraseña"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="La contraseña es obligatoria"
+                              InputType="@PasswordInput"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@PasswordInputIcon"
+                              OnAdornmentClick="TogglePasswordVisibility"
+                              Immediate="true"
+                              HelperText="Mínimo 6 caracteres."
+                              Class="mt-4" />
+
+                <!-- Confirmar contraseña -->
+                <MudTextField @bind-Value="confirmPassword"
+                              Label="Confirmar contraseña"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="Debes confirmar la contraseña"
+                              InputType="@PasswordInput"
+                              Immediate="true"
+                              Validation="@(new Func<string?, Task<string?>>(ValidateConfirmPassword))"
+                              Class="mt-4" />
+
+                <!-- Selección de perfil (Roles desde BD) -->
+                @if (roles != null && roles.Any())
+                {
+                    <MudRadioGroup @bind-Value="SelectedRoleId"
+                                   Label="Tipo de perfil"
+                                   Required="true"
+                                   RequiredError="Selecciona un tipo de perfil"
+                                   Class="mt-4">
+                        @foreach (var role in roles)
+                        {
+                            <MudRadio Value="@role.Id" Color="Color.Primary">
+                                @role.Nombre
+                            </MudRadio>
+                        }
+                    </MudRadioGroup>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mt-4">
+                        No hay roles disponibles. Contacta al administrador.
+                    </MudAlert>
+                }
+            </MudForm>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Default">Cancelar</MudButton>
+        <MudButton OnClick="HandleRegisterAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(!isValid || isLoading)"
+                   StartIcon="@Icons.Material.Filled.AppRegistration">
+            Registrar
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private MudForm form = default!;
+    private bool isValid = false;
+    private string[] errors = { };
+    private bool isLoading = true;
+
+    private UsuarioDto usuario = new();
+    private string confirmPassword = string.Empty;
+
+    // Para roles desde BD
+    private List<RolDto> roles = new();
+    private int SelectedRoleId { get; set; }
+
+    private InputType PasswordInput = InputType.Password;
+    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRolesAsync();
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        try
+        {
+            isLoading = true;
+            // Cargar roles desde la API
+            roles = await HttpClient.GetFromJsonAsync<List<RolDto>>("api/roles") ?? new();
+
+            // Si hay roles, seleccionar el primero por defecto
+            if (roles.Any())
+            {
+                SelectedRoleId = roles.First().Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al cargar roles: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        PasswordInput = PasswordInput == InputType.Password ? InputType.Text : InputType.Password;
+        PasswordInputIcon = PasswordInput == InputType.Password
+            ? Icons.Material.Filled.VisibilityOff
+            : Icons.Material.Filled.Visibility;
+    }
+
+    private async Task<string?> ValidateConfirmPassword(string? value)
+    {
+        if (value != usuario.Password)
+        {
+            return "Las contraseñas no coinciden";
+        }
+        return null;
+    }
+
+    private async Task HandleRegisterAsync()
+    {
+        await form.Validate();
+        if (!isValid) return;
+
+        try
+        {
+            var selectedRole = roles.FirstOrDefault(r => r.Id == SelectedRoleId);
+
+            // Crear objeto para registro incluyendo el rol
+            var registerData = new
+            {
+                usuario.Username,
+                usuario.Nombre,
+                usuario.Email,
+                usuario.Password,
+                RolId = SelectedRoleId,
+                RolNombre = selectedRole?.Nombre
+            };
+
+            var response = await HttpClient.PostAsJsonAsync("api/auth/register", registerData);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add($"✅ Registro exitoso como {selectedRole?.Nombre}. ¡Bienvenido!", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+
+                await Task.Delay(1000);
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"❌ Error: {errorContent}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"❌ Error inesperado: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

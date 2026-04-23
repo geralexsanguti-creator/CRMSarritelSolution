@@ -1,0 +1,265 @@
+Para implementar **refresh tokens** en tu aplicación **Blazor WebAssembly** con JWT (usando el `CustomAuthStateProvider` que ya tienes), necesitas extender el sistema para:
+
+- Generar y devolver **access token** + **refresh token** al hacer login
+- Almacenar **ambos** de forma segura (access en memoria/localStorage, refresh con más cuidado)
+- Intentar refrescar automáticamente el access token cuando esté cerca de expirar o cuando una llamada API falle por 401
+- Actualizar el estado de autenticación en Blazor después de un refresh exitoso
+
+La implementación más común en 2025–2026 para Blazor WASM + API custom JWT es **híbrida**: usar un **DelegatingHandler** para interceptar 401 y refrescar, combinado con chequeo proactivo de expiración.
+
+### 1. Backend (ASP.NET Core Web API) – Cambios necesarios
+
+#### Modelo para Refresh Token
+```csharp
+public class RefreshToken
+{
+    public string Token { get; set; } = null!;
+    public DateTime Expires { get; set; }
+    public DateTime Created { get; set; }
+    public string CreatedByIp { get; set; } = null!;
+    public DateTime? Revoked { get; set; }
+    public string? RevokedByIp { get; set; }
+    public string? ReplacedByToken { get; set; }   // para rotación
+    public bool IsExpired => DateTime.UtcNow >= Expires;
+    public bool IsRevoked => Revoked.HasValue;
+    public bool IsActive => !IsRevoked && !IsExpired;
+}
+```
+
+Agrega al usuario (o tabla separada):
+```csharp
+// En ApplicationUser o tu entidad Usuario
+public List<RefreshToken> RefreshTokens { get; set; } = new();
+```
+
+#### Login endpoint – Devuelve ambos tokens
+```csharp
+[HttpPost("login")]
+public async Task<IActionResult> Login(LoginDto dto)
+{
+    // validar usuario y contraseña...
+
+    var accessToken = GenerateAccessToken(user);           // JWT corto (15–60 min)
+    var refreshToken = GenerateRefreshToken();             // string aleatorio largo
+
+    user.RefreshTokens.Add(new RefreshToken
+    {
+        Token = refreshToken,
+        Expires = DateTime.UtcNow.AddDays(7),  // o 30 días
+        Created = DateTime.UtcNow,
+        CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"
+    });
+
+    await _userManager.UpdateAsync(user);  // o _context.SaveChanges()
+
+    return Ok(new AuthResponseDto
+    {
+        AccessToken = accessToken,
+        RefreshToken = refreshToken,
+        ExpiresIn = 900  // segundos, ej. 15 min
+    });
+}
+```
+
+#### Endpoint de refresh (POST /api/auth/refresh)
+```csharp
+[HttpPost("refresh")]
+public async Task<IActionResult> Refresh(RefreshRequestDto dto)
+{
+    var user = await GetUserByRefreshToken(dto.RefreshToken);
+    if (user == null) return Unauthorized("Invalid refresh token");
+
+    var oldToken = user.RefreshTokens.FirstOrDefault(t => t.Token == dto.RefreshToken);
+    if (oldToken == null || !oldToken.IsActive) return Unauthorized("Refresh token expired or revoked");
+
+    // Rotación (best practice 2025+)
+    var newRefreshToken = GenerateRefreshToken();
+    oldToken.Revoked = DateTime.UtcNow;
+    oldToken.RevokedByIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+    oldToken.ReplacedByToken = newRefreshToken;
+
+    user.RefreshTokens.Add(new RefreshToken
+    {
+        Token = newRefreshToken,
+        Expires = DateTime.UtcNow.AddDays(7),
+        Created = DateTime.UtcNow,
+        CreatedByIp = HttpContext.Connection.RemoteIpAddress?.ToString()
+    });
+
+    await _userManager.UpdateAsync(user);
+
+    var newAccessToken = GenerateAccessToken(user);
+
+    return Ok(new AuthResponseDto
+    {
+        AccessToken = newAccessToken,
+        RefreshToken = newRefreshToken,
+        ExpiresIn = 900
+    });
+}
+```
+
+### 2. Blazor WASM – Client-side cambios
+
+#### Almacenamiento recomendado (trade-off seguridad vs. usabilidad)
+- **Access Token** → localStorage (o memoria si usas servicio singleton)
+- **Refresh Token** → localStorage (más vulnerable) o **HttpOnly cookie** (mejor, pero requiere endpoint dedicado y cuidado con CORS)
+
+Muchos proyectos 2025+ usan **localStorage para ambos** + rotación + revocación por IP/dispositivo.
+
+#### Servicio de Autenticación (nuevo: AuthService.cs)
+```csharp
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject CustomAuthStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+public class AuthService
+{
+    private const string AccessTokenKey = "accessToken";
+    private const string RefreshTokenKey = "refreshToken";
+    private const string ExpiresAtKey = "expiresAt";   // ISO string
+
+    public async Task<bool> LoginAsync(LoginDto login)
+    {
+        var response = await Http.PostAsJsonAsync("api/auth/login", login);
+        if (!response.IsSuccessStatusCode) return false;
+
+        var result = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+        if (result == null) return false;
+
+        await SaveTokens(result.AccessToken, result.RefreshToken, result.ExpiresIn);
+        await AuthStateProvider.NotifyUserAuthenticationAsync(result.AccessToken);
+        return true;
+    }
+
+    public async Task LogoutAsync()
+    {
+        await LocalStorage.RemoveItemsAsync(new[] { AccessTokenKey, RefreshTokenKey, ExpiresAtKey });
+        await AuthStateProvider.NotifyUserLogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+
+    public async Task<bool> RefreshTokenAsync()
+    {
+        var refreshToken = await LocalStorage.GetItemAsync<string>(RefreshTokenKey);
+        if (string.IsNullOrEmpty(refreshToken)) return false;
+
+        var response = await Http.PostAsJsonAsync("api/auth/refresh", new { RefreshToken = refreshToken });
+        if (!response.IsSuccessStatusCode) 
+        {
+            await LogoutAsync(); // refresh inválido → logout
+            return false;
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<AuthResponseDto>();
+        if (result == null) return false;
+
+        await SaveTokens(result.AccessToken, result.RefreshToken, result.ExpiresIn);
+        await AuthStateProvider.NotifyUserAuthenticationAsync(result.AccessToken);
+        return true;
+    }
+
+    private async Task SaveTokens(string access, string refresh, int expiresInSeconds)
+    {
+        await LocalStorage.SetItemAsync(AccessTokenKey, access);
+        await LocalStorage.SetItemAsync(RefreshTokenKey, refresh);
+        var expires = DateTime.UtcNow.AddSeconds(expiresInSeconds - 30); // buffer
+        await LocalStorage.SetItemAsync(ExpiresAtKey, expires.ToString("o"));
+    }
+
+    public async Task<string?> GetAccessTokenAsync()
+    {
+        var expiresStr = await LocalStorage.GetItemAsync<string>(ExpiresAtKey);
+        if (string.IsNullOrEmpty(expiresStr)) return null;
+
+        var expires = DateTime.Parse(expiresStr);
+        if (DateTime.UtcNow >= expires)
+        {
+            var refreshed = await RefreshTokenAsync();
+            if (!refreshed) return null;
+        }
+
+        return await LocalStorage.GetItemAsync<string>(AccessTokenKey);
+    }
+}
+```
+
+#### Modificar CustomAuthStateProvider para usar solo access token (pero permitir refresh)
+En `GetAuthenticationStateAsync` y `NotifyUserAuthenticationAsync` → usa solo el **access token** para parsear claims.
+
+Pero en el **HttpClient** → configura un **DelegatingHandler** para auto-refresh en 401.
+
+#### DelegatingHandler para refresh automático (recomendado)
+```csharp
+public class RefreshTokenHandler : DelegatingHandler
+{
+    private readonly AuthService _authService;
+    private readonly ILogger<RefreshTokenHandler> _logger;
+
+    public RefreshTokenHandler(AuthService authService, ILogger<RefreshTokenHandler> logger)
+    {
+        _authService = authService;
+        _logger = logger;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+    {
+        var response = await base.SendAsync(request, ct);
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _logger.LogInformation("401 detectado → intentando refresh");
+
+            var refreshed = await _authService.RefreshTokenAsync();
+            if (refreshed)
+            {
+                // Reintentar la petición original con nuevo token
+                if (request.Headers.Authorization != null)
+                {
+                    var token = await _authService.GetAccessTokenAsync();
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    }
+                }
+                response = await base.SendAsync(request, ct);
+            }
+        }
+
+        return response;
+    }
+}
+```
+
+#### Registro en Program.cs (Client)
+```csharp
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpClient("API", client => 
+{
+    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+})
+.AddHttpMessageHandler<RefreshTokenHandler>();
+
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("API"));
+
+// Tu CustomAuthStateProvider ya lo tienes
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+```
+
+### Resumen del flujo recomendado (2026 best practice)
+
+1. Login → guardas access + refresh + expires
+2. `CustomAuthStateProvider` usa **solo access token** para claims
+3. Llamadas API normales van con Bearer access token
+4. Si 401 → `RefreshTokenHandler` refresca → reintenta
+5. Chequeo proactivo (opcional) en `GetAccessTokenAsync()` antes de poner el header
+
+### Consideraciones de seguridad 2026
+
+- Usa **rotación de refresh tokens** (cada refresh invalida el anterior)
+- Almacena refresh en **localStorage** → vulnerable a XSS → mitiga con CSP fuerte
+- Alternativa más segura: **BFF** (Backend for Frontend) + HttpOnly cookies
+- Revoca refresh tokens en logout / cambio de contraseña
+
+¿Quieres enfocarte en alguna parte específica (ej. el handler, almacenamiento seguro, logout global, o integración con roles)? Puedo darte código más detallado de esa sección.

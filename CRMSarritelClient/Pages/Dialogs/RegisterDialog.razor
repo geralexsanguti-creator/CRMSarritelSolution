@@ -1,0 +1,128 @@
+﻿@inherits MudBlazor.MudDialog
+@using MudBlazor
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">Registro de Usuario</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isValid">
+            <!-- Nombre -->
+            <MudTextField @bind-Value="usuario.Username"
+                          Label="Nombre"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="El nombre es obligatorio"
+                          Immediate="true"
+                          HelperText="Por favor, ingresa tu nombre." />
+
+            <!-- Email -->
+            <MudTextField @bind-Value="usuario.Email"
+                          Label="Correo Electrónico"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          InputType="InputType.Email"                          
+                          Immediate="true"
+                          HelperText="Por favor, ingresa un correo válido."
+                          Class="mt-4" />
+
+            <!-- Contraseña con toggle -->
+            <MudTextField @bind-Value="usuario.Password"
+                          Label="Contraseña"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="La contraseña es obligatoria"
+                          InputType="@PasswordInput"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@PasswordInputIcon"
+                          OnAdornmentClick="TogglePasswordVisibility"
+                          Immediate="true"
+                          HelperText="Por favor, ingresa una contraseña segura."
+                          Class="mt-4" />
+
+            <!-- Selección de perfil -->
+            <MudRadioGroup @bind-Value="SelectedOption" Class="mt-4">
+                <MudRadio Value="@("Cliente")" Color="Color.Primary">Cliente</MudRadio>
+                <MudRadio Value="@("Vendedor")" Color="Color.Primary">Vendedor</MudRadio>
+            </MudRadioGroup>
+        </MudForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Default">Cancelar</MudButton>
+        <MudButton OnClick="HandleRegisterAsync"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Disabled="@(!isValid)">
+            Registrar
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private MudForm form = default!;
+    private bool isValid = false;
+
+    private RegisterRequest usuario = new();
+    private string SelectedOption { get; set; } = "Cliente";
+
+    private InputType PasswordInput = InputType.Password;
+    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private void TogglePasswordVisibility()
+    {
+        PasswordInput = PasswordInput == InputType.Password ? InputType.Text : InputType.Password;
+        PasswordInputIcon = PasswordInput == InputType.Password
+            ? Icons.Material.Filled.VisibilityOff
+            : Icons.Material.Filled.Visibility;
+    }
+
+    private async Task HandleRegisterAsync()
+    {
+        await form.Validate();
+        if (!isValid) return;
+
+        try
+        {
+            // Asignamos el rol seleccionado (asumiendo que Roles es List<string> o string[])
+            usuario.RolId =  Convert.ToInt32(SelectedOption);
+
+            var response = await HttpClient.PostAsJsonAsync("api/usuarios", usuario);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Registro exitoso. ¡Bienvenido!", Severity.Success);
+                NavigationManager.NavigateTo("/login");
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var message = string.IsNullOrWhiteSpace(errorContent)
+                    ? "Error al registrar el usuario."
+                    : $"Error: {errorContent}";
+
+                await DialogService.ShowMessageBox("Registro fallido", message, yesText: "Aceptar");
+            }
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Error inesperado", ex.Message, yesText: "Aceptar");
+        }
+        // No cerramos si falla → permite corregir
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    // Asumimos que tienes esta clase en Shared o Models
+    
+}

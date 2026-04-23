@@ -1,0 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* Pure white as requested */
+    --foreground: 0 0% 10%; /* Dark text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 174 85% 52%; /* #1aeed9ff approx */
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 220 15% 90%;
+    --secondary-foreground: 220 20% 10%;
+
+    --muted: 240 4.8% 95.9%; /* Light gray for backgrounds/hover in light mode */
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 35 95% 55%;
+    --accent-foreground: 0 0% 5%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 10% 18%;
+    --input: 220 10% 18%;
+    --ring: 173 80% 50%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 173 80% 50%; /* Keep primary generic */
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 240 10% 3.9%;
+    
+    --border: 220 13% 91%; /* Light gray border instead of dark */
+    --input: 220 13% 91%;
+
+    /* Custom CRM tokens */
+    --glass-bg: 0 0% 100% / 0.05;
+    --glass-border: 0 0% 100% / 0.1;
+    --glass-hover: 0 0% 100% / 0.08;
+
+    --status-lead: 210 90% 55%;
+    --status-active: 145 70% 50%;
+    --status-inactive: 0 0% 45%;
+    --status-pending: 35 95% 55%;
+    --status-completed: 145 70% 50%;
+    --status-cancelled: 0 72% 51%;
+    --status-paid: 145 70% 50%;
+    --status-voided: 0 0% 45%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(173 80% 50%), hsl(190 80% 40%));
+    --gradient-accent: linear-gradient(135deg, hsl(35 95% 55%), hsl(25 90% 50%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 12%), hsl(0 0% 9%));
+    --shadow-glow: 0 0 30px hsl(173 80% 50% / 0.15);
+    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
+  }
+
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 210 20% 95%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 173 80% 50%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 210 20% 90%;
+
+    --border: 220 10% 18%;
+    --input: 220 10% 18%;
+    --ring: 173 80% 50%;
+
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 210 15% 70%;
+    --sidebar-primary: 173 80% 50%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 220 10% 14%;
+    --sidebar-accent-foreground: 210 20% 90%;
+    --sidebar-border: 220 10% 15%;
+    --sidebar-ring: 173 80% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* Glassmorphism utility */
+  .glass {
+    background-color: hsl(var(--card) / 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-hover {
+    transition: all 0.3s ease;
+  }
+  .glass-hover:hover {
+    background-color: hsl(var(--card) / 0.8);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  /* Hide number input spinners globally */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -webkit-appearance: textfield;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* Skeleton pulse animation */
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  .skeleton-pulse {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

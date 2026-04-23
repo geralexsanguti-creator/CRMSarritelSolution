@@ -1,0 +1,179 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@using MudBlazor
+@inject IDialogService DialogService
+@using CRMSarritelClient
+
+<!-- Only ONE MudThemeProvider – with your bindings -->
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="_customTheme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Style="min-height: 100vh; display: flex; flex-direction: column;">
+    <MudAppBar Color="Color.Primary" Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
+        <MudText Typo="Typo.h5">CRMSarritelClient</MudText>
+        <MudSpacer />
+
+        <AuthorizeView Context="authContext">
+            <Authorized>
+                <MudText>Hello, @authContext.User.Identity?.Name</MudText>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" @onclick="Logout">Cerrar sesión</MudButton>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Inherit"
+                           OnClick="OpenLoginDialog">
+                    Iniciar sesión
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="OpenRegisterDialog">
+                    Registrarse
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <MudToggleIconButton @bind-Toggled="_isDarkMode"
+                             Icon="@Icons.Material.Filled.DarkMode"
+                             ToggledIcon="@Icons.Material.Filled.LightMode"
+                             Color="Color.Inherit"
+                             ToggledColor="Color.Warning" />
+    </MudAppBar>
+
+    <MudMainContent Class="flex-grow" Style="flex: 1 0 auto;">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-4 pt-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+
+    <MudAppBar Color="Color.Surface" Elevation="4" Fixed="true" Bottom="true" Class="d-flex justify-center align-center py-3">
+        <MudText Typo="Typo.body2" Color="Color.Default">
+            © @(DateTime.Now.Year) CRM Sarritel •
+        </MudText>
+        <MudLink Href="/privacidad" Class="mx-3" Color="Color.Primary">Privacidad</MudLink>
+        <MudLink Href="/terminos" Class="mx-3" Color="Color.Primary">Términos</MudLink>
+        <MudLink Href="/contacto" Class="mx-3" Color="Color.Primary">Contacto</MudLink>
+    </MudAppBar>
+</MudLayout>
+
+@code {
+    private bool _isDarkMode = false;
+
+    private MudTheme _customTheme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#1976d2",
+            PrimaryContrastText = "#ffffff",
+            Secondary = "#f50057",
+            SecondaryContrastText = "#ffffff",
+            Tertiary = "#00bcd4",
+            Info = "#2196f3",
+            Success = "#4caf50",
+            Warning = "#ff9800",
+            Error = "#f44336",
+            Background = "#ffffff",
+            AppbarBackground = "#1976d2",
+            DrawerBackground = "#f5f5f5",
+            DrawerText = "#212121",
+            DrawerIcon = "#616161",
+            LinesDefault = "rgba(0,0,0,0.12)",
+            TableLines = "rgba(0,0,0,0.06)",
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#90caf9",
+            PrimaryContrastText = "#000000",
+            Secondary = "#f06292",
+            SecondaryContrastText = "#000000",
+            Tertiary = "#26c6da",
+            Info = "#64b5f6",
+            Success = "#81c784",
+            Warning = "#ffb74d",
+            Error = "#e57373",
+            Background = "#121212",
+            Surface = "#1e1e1e",
+            AppbarBackground = "#1e88e5",
+            DrawerBackground = "#1e1e1e",
+            DrawerText = "#e0e0e0",
+            LinesDefault = "rgba(255,255,255,0.12)",
+        },
+        Typography = new Typography
+        {
+            Default = new DefaultTypography
+            {
+                FontFamily = new[] { "Inter", "Helvetica", "Arial", "sans-serif" }
+            }
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DrawerWidthLeft = "260px",
+            DefaultBorderRadius = "8px"
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await LocalStorage.ContainKeyAsync("darkMode"))
+        {
+            _isDarkMode = await LocalStorage.GetItemAsync<bool>("darkMode");
+        }
+        // No need for StateHasChanged() here in most cases
+    }
+
+    // Optional: if you want extra logic when toggled (but @bind already handles _isDarkMode = value)
+    // private async Task OnDarkModeChanged(bool value)
+    // {
+    //     _isDarkMode = value;
+    //     await LocalStorage.SetItemAsync("darkMode", value);
+    // }
+
+    private void Logout()
+    {
+        Navigation.NavigateTo("/logout");  // standard for AddApiAuthorization / custom OIDC
+                                                               // Or for pure custom JWT: await LocalStorage.RemoveItemAsync("authToken"); AuthStateProvider.NotifyUserLogout(); Navigation.NavigateTo("/");
+    }
+
+    private async Task OpenLoginDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+            Position = DialogPosition.Center
+        };
+
+        var dialog = await DialogService.ShowAsync<LoginDialog>("Iniciar Sesión", options);
+
+        // Opcional: manejar resultado si cierras con éxito
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            // éxito
+        }
+    }
+
+    private async Task OpenRegisterDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            Position = DialogPosition.Center
+        };
+
+        var dialog = await DialogService.ShowAsync<RegisterDialog>("Registro de Usuario", options);
+
+        var result = await dialog.Result;
+        if (result?.Canceled == false)
+        {
+            // Éxito → ya se hizo NavigateTo("/login") dentro del diálogo
+        }
+    }
+
+}

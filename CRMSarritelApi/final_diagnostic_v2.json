@@ -1,0 +1,330 @@
+﻿{
+    "user":  {
+                 "id":  3,
+                 "username":  "paco",
+                 "roles":  [
+                               {
+                                   "rolId":  5,
+                                   "nombre":  "LAB - Senior"
+                               }
+                           ]
+             },
+    "allRules":  [
+                     {
+                         "id":  3,
+                         "nombre":  "LOW(resi)",
+                         "variable":  "total_ventas",
+                         "tiers":  [
+                                       {
+                                           "id":  28,
+                                           "nombre":  "Tier 1",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  10,
+                                                                     "rolNombre":  "AUT -  Junior",
+                                                                     "valor":  200,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  29,
+                                           "nombre":  "Tier 2",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  11,
+                                                                     "rolNombre":  "AUT - Senior",
+                                                                     "valor":  240,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  30,
+                                           "nombre":  "Tier 3",
+                                           "valorMin":  6,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  9,
+                                                                     "rolNombre":  "LAB - Junior",
+                                                                     "valor":  150,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  31,
+                                           "nombre":  "Tier 4",
+                                           "valorMin":  6,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  5,
+                                                                     "rolNombre":  "LAB - Senior",
+                                                                     "valor":  150,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       }
+                                   ],
+                         "base":  [
+
+                                  ]
+                     },
+                     {
+                         "id":  6,
+                         "nombre":  "MI NEGOCIO PRO",
+                         "variable":  "total_ventas",
+                         "tiers":  [
+                                       {
+                                           "id":  16,
+                                           "nombre":  "Tier 1",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  10,
+                                                                     "rolNombre":  "AUT -  Junior",
+                                                                     "valor":  200,
+                                                                     "tipoCalculo":  "porcentaje"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  17,
+                                           "nombre":  "Tier 2",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  11,
+                                                                     "rolNombre":  "AUT - Senior",
+                                                                     "valor":  240,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  18,
+                                           "nombre":  "Tier 3",
+                                           "valorMin":  6,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  9,
+                                                                     "rolNombre":  "LAB - Junior",
+                                                                     "valor":  170,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  19,
+                                           "nombre":  "Tier 4",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  5,
+                                                                     "rolNombre":  "LAB - Senior",
+                                                                     "valor":  170,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       }
+                                   ],
+                         "base":  [
+
+                                  ]
+                     },
+                     {
+                         "id":  7,
+                         "nombre":  "LOWI",
+                         "variable":  "total_ventas",
+                         "tiers":  [
+                                       {
+                                           "id":  20,
+                                           "nombre":  "Tier 1",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  10,
+                                                                     "rolNombre":  "AUT -  Junior",
+                                                                     "valor":  90,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  21,
+                                           "nombre":  "Tier 2",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  11,
+                                                                     "rolNombre":  "AUT - Senior",
+                                                                     "valor":  130,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  22,
+                                           "nombre":  "Tier 3",
+                                           "valorMin":  6,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  9,
+                                                                     "rolNombre":  "LAB - Junior",
+                                                                     "valor":  70,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  23,
+                                           "nombre":  "Tier 4",
+                                           "valorMin":  6,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  5,
+                                                                     "rolNombre":  "LAB - Senior",
+                                                                     "valor":  70,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       }
+                                   ],
+                         "base":  [
+
+                                  ]
+                     },
+                     {
+                         "id":  8,
+                         "nombre":  "LINEA(Unlimited)",
+                         "variable":  "total_ventas",
+                         "tiers":  [
+                                       {
+                                           "id":  24,
+                                           "nombre":  "Tier 1",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  10,
+                                                                     "rolNombre":  "AUT -  Junior",
+                                                                     "valor":  15,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  25,
+                                           "nombre":  "Tier 2",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  11,
+                                                                     "rolNombre":  "AUT - Senior",
+                                                                     "valor":  15,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  26,
+                                           "nombre":  "Tier 3",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  9,
+                                                                     "rolNombre":  "LAB - Junior",
+                                                                     "valor":  10,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       },
+                                       {
+                                           "id":  27,
+                                           "nombre":  "Tier 4",
+                                           "valorMin":  0,
+                                           "valorMax":  null,
+                                           "reparticiones":  [
+                                                                 {
+                                                                     "rolId":  5,
+                                                                     "rolNombre":  "LAB - Senior",
+                                                                     "valor":  10,
+                                                                     "tipoCalculo":  "fijo"
+                                                                 }
+                                                             ]
+                                       }
+                                   ],
+                         "base":  [
+
+                                  ]
+                     }
+                 ],
+    "recentSales":  [
+                        {
+                            "id":  4,
+                            "numeroVenta":  "VTA-819887",
+                            "estado":  "Activo",
+                            "esGanada":  true,
+                            "esFinal":  true,
+                            "fechaVenta":  "2026-04-20T00:00:00Z",
+                            "fechaInstalacionReal":  "2026-04-20T00:00:00Z",
+                            "detalles":  [
+                                             {
+                                                 "id":  4,
+                                                 "idProducto":  15,
+                                                 "producto":  "Demo1"
+                                             }
+                                         ]
+                        }
+                    ],
+    "allSystemRoles":  [
+                           {
+                               "id":  1,
+                               "nombre":  "Admin"
+                           },
+                           {
+                               "id":  2,
+                               "nombre":  "Backoffice"
+                           },
+                           {
+                               "id":  3,
+                               "nombre":  "DIRECTOR"
+                           },
+                           {
+                               "id":  10,
+                               "nombre":  "AUT -  Junior"
+                           },
+                           {
+                               "id":  9,
+                               "nombre":  "LAB - Junior"
+                           },
+                           {
+                               "id":  5,
+                               "nombre":  "LAB - Senior"
+                           },
+                           {
+                               "id":  11,
+                               "nombre":  "AUT - Senior"
+                           },
+                           {
+                               "id":  12,
+                               "nombre":  "Colaborador"
+                           }
+                       ]
+}

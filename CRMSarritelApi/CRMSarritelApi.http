@@ -1,0 +1,6 @@
+@CRMSarritelApi_HostAddress = http://localhost:5062
+
+GET {{CRMSarritelApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

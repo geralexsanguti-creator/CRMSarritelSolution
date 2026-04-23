@@ -1,0 +1,175 @@
+﻿@page "/"
+@using MudBlazor
+@inject IDialogService DialogService
+
+
+<PageTitle>Home</PageTitle>
+
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-16 px-4">
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12" md="10" lg="8">
+                <MudText Typo="Typo.h1" Align="Align.Center" GutterBottom="true" Class="font-weight-black" Style="font-size: 4.5rem; line-height: 1.1;">
+                    CRM Sarritel
+                </MudText>
+
+                <MudText Typo="Typo.h4" Align="Align.Center" Color="Color.Secondary" Class="mb-8 mt-4">
+                    El CRM inteligente que simplifica la gestión de clientes, ventas y relaciones comerciales
+                </MudText>
+
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="mb-10" Color="Color.Secondary">
+                    Diseñado para empresas que quieren crecer rápido sin perder el control ni complicarse la vida.
+                </MudText>
+
+                <div class="d-flex justify-center flex-wrap gap-4">
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary" 
+                               Size="Size.Large" 
+                               OnClick="OpenLoginDialog"
+                               StartIcon="@Icons.Material.Filled.Star"
+                               Class="px-10 py-6" 
+                               Style="font-size: 1.25rem;">
+                        Iniciemos
+                    </MudButton>
+
+                   <!-- <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Primary" 
+                               Size="Size.Large" 
+                               Href="/demo" 
+                               StartIcon="@Icons.Material.Filled.PlayCircle">
+                        Ver demo en vivo
+                 </MudButton>-->
+                </div>
+
+                <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-6" Color="Color.Transparent">
+                    Sin tarjeta de crédito • Cancelación cuando quieras • Sin compromisos
+                </MudText>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-12 px-4" id="testimonios">
+    <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-10">Lo que dicen nuestros clientes</MudText>
+
+    <MudCarousel Style="height: 320px;" TData="Testimonio" AutoCycle="true" CycleInterval="8000" Arrows="true" Bullets="true" EnableSwipe="true">
+        @foreach (var t in Testimonios)
+        {
+            <MudCarouselItem Value="@t">
+                <MudPaper Class="pa-8 ma-4 text-center" Elevation="2">
+                    <MudText Typo="Typo.h6" Class="mb-4">"@t.Texto"</MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Primary">@t.Nombre</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@t.Cargo - @t.Empresa</MudText>
+                </MudPaper>
+            </MudCarouselItem>
+        }
+    </MudCarousel>
+</MudContainer>
+
+
+    <!-- Features -->
+<MudContainer MaxWidth="MaxWidth.Large" Class="py-12 px-4">
+        <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-10">Funcionalidades clave</MudText>
+
+        <MudGrid Spacing="4">
+            @foreach (var feature in Features)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Elevation="4" Class="h-100 d-flex flex-column">
+                        <MudCardContent Class="pa-6 flex-grow-1">
+                            <MudIcon Icon="@feature.Icon" Size="Size.Large" Color="Color.Primary" Class="mb-4" />
+                            <MudText Typo="Typo.h5" Class="mb-3">@feature.Title</MudText>
+                            <MudText Typo="Typo.body1" Color="Color.Secondary">@feature.Description</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudContainer>
+
+    <!-- CTA Final -->
+<MudPaper Class="mt-12 pa-12 text-center" Elevation="0" 
+              Style="background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-primary-darken) 100%); color: white; border-radius: 0;">
+        <MudContainer MaxWidth="MaxWidth.Medium">
+            <MudText Typo="Typo.h4" Class="mb-6">Empieza a transformar tu negocio hoy</MudText>
+            <MudText Typo="Typo.body1" Class="mb-8 opacity-85">
+                Prueba todas las herramientas sin costo. Miles de empresas ya lo están haciendo.
+            </MudText>
+            <!--<MudButton Variant="Variant.Filled" 
+                       Color="Color.Surface" 
+                       Size="Size.Large" 
+                       Href="/register" 
+                       Class="px-12 py-6" 
+                       Style="font-size: 1.4rem; font-weight: bold;">
+                Crear cuenta gratuita
+        </MudButton>-->
+        </MudContainer>
+    </MudPaper>
+
+Welcome to your new app.
+@code {
+    private record Feature(string Title, string Description, string Icon); 
+    private record Testimonio(string Texto, string Nombre, string Cargo, string Empresa);
+
+    private readonly List<Feature> Features = new(){
+        new("Gestión de Clientes", "Centraliza contactos, historial, notas y comunicaciones en un solo lugar.", Icons.Material.Filled.People),
+        new("Pipeline de Ventas", "Visualiza oportunidades, pronósticos y recordatorios para cerrar más deals.", Icons.Material.Filled.ShowChart),
+        new("Comunicación Integrada", "Email, WhatsApp y SMS directamente desde el CRM con plantillas.", Icons.Material.Filled.Email),
+        new("Reportes en Tiempo Real", "Dashboards personalizables, métricas clave y exportación fácil.", Icons.Material.Filled.Analytics),
+        new("Multi-dispositivo", "100% responsive – accede desde móvil, tablet o PC sin limitaciones.", Icons.Material.Filled.MobileFriendly),
+        new("Seguridad Avanzada", "Encriptación, backups automáticos y cumplimiento RGPD/ISO.", Icons.Material.Filled.Security)
+    };
+
+    
+
+    private readonly List<Testimonio> Testimonios = new()
+    {
+        new("CRM Sarritel nos ayudó a aumentar un 35% las conversiones en solo 3 meses. ¡Totalmente recomendable!", "Ana López", "Directora de Ventas", "TechNova Solutions"),
+        new("La integración con WhatsApp cambió por completo cómo atendemos a nuestros clientes. Increíble herramienta.", "Carlos Mendoza", "CEO", "Inmuebles Rápido"),
+        new("Fácil de usar, reportes potentes y soporte excelente. Pasamos de 3 herramientas a solo una.", "María González", "Gerente de Marketing", "EcoVida Distribuidora")
+    };
+
+    private async Task OpenLoginDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true,
+            Position = DialogPosition.Center
+        };
+
+        var dialog = await DialogService.ShowAsync<LoginDialog>("Iniciar Sesión", options);
+
+        // Opcional: manejar resultado si cierras con éxito
+        var dialogResult = await dialog.Result;
+        if (dialogResult is { Canceled: false })
+        {
+            // éxito
+        }
+    }
+
+    private async Task OpenRegisterDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            Position = DialogPosition.Center
+        };
+
+        var dialog = await DialogService.ShowAsync<RegisterDialog>("Registro de Usuario", options);
+
+        var result = await dialog.Result;
+        if (result?.Canceled == false)
+        {
+            // Éxito → ya se hizo NavigateTo("/login") dentro del diálogo
+        }
+    }
+
+    private bool _isDarkMode = false;
+
+    
+
+
+}

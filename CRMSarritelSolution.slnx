@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CRMSarritel.Shared/CRMSarritel.Shared.csproj" Id="af6b4c3b-7969-4485-b9ba-82b98a97bbbe" />
+  <Project Path="CRMSarritelApi/CRMSarritelApi.csproj" Id="fd94d029-44e3-4d3d-9a8f-c81f9f12b51e" />
+  <Project Path="CRMSarritelClient/CRMSarritelClient.csproj" Id="45c3b6d5-05ad-40a3-9e0d-8f324faf5400" />
+  <Project Path="CRMSarritelFront/CRMSarritelFront.csproj" />
+</Solution>

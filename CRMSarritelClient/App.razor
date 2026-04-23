@@ -1,0 +1,36 @@
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData"
+                                DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <MudContainer>
+                        <MudText Typo="Typo.h4">No autorizado</MudText>
+                        <MudText>Debes iniciar sesión para ver esta página.</MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Href="/login">
+                            Iniciar Sesión
+                        </MudButton>
+                    </MudContainer>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Página no encontrada</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <MudContainer>
+                    <MudText Typo="Typo.h3">404</MudText>
+                    <MudText Typo="Typo.h5">Página no encontrada</MudText>
+                    <p role="alert">Lo sentimos, no hay nada en esta ruta.</p>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Href="/">
+                        Ir al inicio
+                    </MudButton>
+                </MudContainer>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

@@ -1,0 +1,3 @@
+﻿"Path","LineNumber","Line"
+"C:\Users\naata\OneDrive\Escritorio\CRMSarritelSolution\CRMSarritelfront\src\components\layout\AppSidebar.tsx","36","    if (item.title === ""Dashboard"") return true; // Everyone sees dashboard"
+"C:\Users\naata\OneDrive\Escritorio\CRMSarritelSolution\CRMSarritelfront\src\contexts\AuthContext.tsx","88","      // Redirect to dashboard"

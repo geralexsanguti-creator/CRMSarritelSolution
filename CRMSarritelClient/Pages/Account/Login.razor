@@ -1,0 +1,66 @@
+﻿@page "/login"
+
+@inject HttpClient Http
+@inject CustomAuthStateProvider AuthStateProvider
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Nav
+
+<MudContainer MaxWidth="MaxWidth.ExtraSmall" Class="mt-10">
+    <MudPaper Class="pa-6 rounded-lg" Elevation="25">
+        <MudText Typo="Typo.h4" Class="text-center mb-6">Iniciar Sesión</MudText>
+        
+        <MudTextField @bind-Value="usuario.Username" Label="Nombre" Variant="Variant.Outlined"
+                      FullWidth="true" Margin="Margin.Dense" Required="true"
+                      HelperText="Por favor, ingresa tu nombre." />
+        <MudTextField @bind-Value="usuario.Password" Label="Contraseña" Variant="Variant.Outlined"
+                      FullWidth="true" Margin="Margin.Dense" InputType="@PasswordInput"
+                      Required="true" HelperText="Por favor, ingresa una contraseña segura."
+                      Class="mt-4" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon"
+                      OnAdornmentClick="ButtonTestclick" AdornmentAriaLabel="Show Password" />
+
+
+        <MudButton OnClick="LoginAsync">Iniciar sesión</MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private UsuarioDto usuario = new UsuarioDto();
+
+    public string Password { get; set; } = string.Empty;
+    private bool isShow;
+    private InputType PasswordInput = InputType.Password;
+    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private async Task LoginAsync()
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/auth/login", new { usuario.Username, usuario.Password });
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<TokenResponse>() ?? new TokenResponse();
+                await LocalStorage.SetItemAsync("authToken", result.Token);
+                Nav.NavigateTo("/");
+            }
+        }
+        catch { /* handle error */ }
+    }
+
+    private class TokenResponse { public string Token { get; set; } = ""; }
+
+    private void ButtonTestclick()
+    {
+        if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+}
