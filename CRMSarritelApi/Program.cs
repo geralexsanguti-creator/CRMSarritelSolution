@@ -13,6 +13,8 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using CRMSarritelApi.Models;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +46,24 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddSignalR();
+
+// OpenTelemetry
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddPrometheusExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation();
+    });
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 
@@ -175,6 +195,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Endpoint que Prometheus va a leer
+app.MapPrometheusScrapingEndpoint();   // URL: /metrics
 
 // 1. CORS DEBE IR PRIMERO PARA QUE INCLUSO LOS ERRORES 500 TENGAN CABECERAS
 app.UseCors("AllowSpecificOrigins");

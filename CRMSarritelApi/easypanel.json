@@ -1,0 +1,10 @@
+{
+  "build": {
+    "command": "dotnet publish -c Release -o publish",
+    "outputDir": "publish"
+  },
+  "server": {
+    "framework": "dotnet",
+    "port": 5000
+  }
+}

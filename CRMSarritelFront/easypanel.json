@@ -1,0 +1,10 @@
+{
+  "build": {
+    "command": "npm install && npm run build",
+    "outputDir": "dist"
+  },
+  "server": {
+    "framework": "vite",
+    "port": 5173
+  }
+}
