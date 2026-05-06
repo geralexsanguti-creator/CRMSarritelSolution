@@ -1,37 +1,46 @@
 version: '3.8'
 
 services:
+  # Reverse Proxy (Nginx)
+  reverse-proxy:
+    image: nginx:alpine
+    container_name: crmsarritel-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - frontend
+    networks:
+      - crm-network
+
   # API Backend
   api:
     build:
       context: .
       dockerfile: CRMSarritelApi/Dockerfile
     container_name: crmsarritel-api
-    ports:
-      - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=crmsarritel;Username=postgres;Password=postgres
-      - AppSettings__Token=${JWT_TOKEN:-your-secret-token-here}
+      - ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=crmsarritel;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}
+      - AppSettings__Token=${JWT_TOKEN:-change-this-secret}
     depends_on:
       - postgres
     networks:
       - crm-network
+    restart: unless-stopped
 
-  # Frontend
+  # Frontend (static files - served by proxy)
   frontend:
     build:
       context: ./CRMSarritelFront
       dockerfile: Dockerfile
     container_name: crmsarritel-frontend
-    ports:
-      - "80:80"
-    environment:
-      - VITE_API_URL=http://api:5000
-    depends_on:
-      - api
     networks:
       - crm-network
+    restart: unless-stopped
 
   # PostgreSQL Database
   postgres:
@@ -39,14 +48,13 @@ services:
     container_name: crmsarritel-db
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=crmsarritel
-    ports:
-      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - crm-network
+    restart: unless-stopped
 
   # Prometheus (Metrics)
   prometheus:
@@ -59,8 +67,10 @@ services:
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
     networks:
       - crm-network
+    restart: unless-stopped
 
   # Grafana (Dashboards)
   grafana:
@@ -69,7 +79,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
       - GF_INSTALL_PLUGINS=grafana-piechart-panel
     volumes:
       - grafana-data:/var/lib/grafana
@@ -77,6 +87,7 @@ services:
       - prometheus
     networks:
       - crm-network
+    restart: unless-stopped
 
 networks:
   crm-network:
