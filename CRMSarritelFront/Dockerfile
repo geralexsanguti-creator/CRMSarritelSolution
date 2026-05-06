@@ -1,29 +1,29 @@
-# Stage 1: Build
+# ================== BUILD STAGE ==================
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy package files
+# Copiar package files primero (mejor cache)
 COPY package*.json ./
 COPY package-lock.json* ./
 
-# Install dependencies
+# Instalar dependencias
 RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
-# Copy source
+# Copiar el resto del código
 COPY . .
 
-# Build
+# Construir la aplicación
 RUN npm run build
 
-# Stage 2: Production
+# ================== PRODUCTION STAGE ==================
 FROM nginx:alpine AS production
+WORKDIR /usr/share/nginx/html
 
-# Copy built files
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copiar los archivos compilados
+COPY --from=builder /app/dist ./
 
-# Copy nginx config
+# Copiar configuración de Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]
