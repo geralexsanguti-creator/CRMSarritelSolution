@@ -1,99 +1,122 @@
 version: '3.8'
 
-services:
-  # Reverse Proxy (Nginx)
-  reverse-proxy:
-    image: nginx:alpine
-    container_name: crmsarritel-proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - api
-      - frontend
-    networks:
-      - crm-network
-
-  # API Backend
-  api:
-    build:
-      context: .
-      dockerfile: CRMSarritelApi/Dockerfile
-    container_name: crmsarritel-api
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=crmsarritel;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres}
-      - AppSettings__Token=${JWT_TOKEN:-change-this-secret}
-    depends_on:
-      - postgres
-    networks:
-      - crm-network
-    restart: unless-stopped
-
-  # Frontend (static files - served by proxy)
-  frontend:
-    build:
-      context: ./CRMSarritelFront
-      dockerfile: Dockerfile
-    container_name: crmsarritel-frontend
-    networks:
-      - crm-network
-    restart: unless-stopped
-
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16-alpine
-    container_name: crmsarritel-db
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=crmsarritel
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - crm-network
-    restart: unless-stopped
-
-  # Prometheus (Metrics)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: crmsarritel-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    networks:
-      - crm-network
-    restart: unless-stopped
-
-  # Grafana (Dashboards)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: crmsarritel-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel
-    volumes:
-      - grafana-data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    networks:
-      - crm-network
-    restart: unless-stopped
-
 networks:
-  crm-network:
+  crmsarritel-network:
     driver: bridge
 
 volumes:
-  postgres-data:
-  prometheus-data:
-  grafana-data:
+  postgres_data:
+  uploads_data:
+
+services:
+  # PostgreSQL 17 Database
+  crm-postgres:
+    image: postgres:17-alpine
+    container_name: crm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crmsarritel
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - crmsarritel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crmsarritel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Backend
+  crm-api:
+    build:
+      context: .
+      dockerfile: CRMSarritelApi/Dockerfile
+    container_name: crm-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - DATABASE_URL=Host=crm-postgres;Port=5432;Database=crmsarritel;Username=postgres;Password=${DB_PASSWORD}
+      - AppSettings__Token=${JWT_TOKEN}
+      - AppSettings__Issuer=${JWT_ISSUER:-CRMSarritelAPI}
+      - AppSettings__Audience=${JWT_AUDIENCE:-CRMSarritelClients}
+    volumes:
+      - uploads_data:/app/wwwroot/uploads
+    networks:
+      - crmsarritel-network
+    depends_on:
+      crm-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend (React/Vue/Angular)
+  crm-frontend:
+    build:
+      context: ./CRMSarritelFront
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+    container_name: crm-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - API_BASE_URL=http://crm-api:8080
+    networks:
+      - crmsarritel-network
+    depends_on:
+      - crm-api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Opcional: Cliente (si es necesario)
+  crm-client:
+    build:
+      context: .
+      dockerfile: CRMSarritelClient/Dockerfile
+    container_name: crm-client
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8081
+      - API_URL=http://crm-api:8080
+    networks:
+      - crmsarritel-network
+    depends_on:
+      - crm-api
+    profiles:
+      - full
+
+  # Opcional: pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: crm-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@crm.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+    ports:
+      - "5050:80"
+    networks:
+      - crmsarritel-network
+    depends_on:
+      - crm-postgres
+    profiles:
+      - tools
