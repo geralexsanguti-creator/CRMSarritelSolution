@@ -1,56 +1,28 @@
-# ================== BUILD STAGE ==================
-FROM node:20-alpine AS builder
+# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
+# This stage is used when running from VS in fast mode (Default for Debug configuration)
+FROM mcr.microsoft.com/dotnet/runtime:10.0 AS base
+USER $APP_UID
 WORKDIR /app
 
-# Copiar archivos de configuración de paquetes
-COPY package*.json ./
-COPY package-lock.json* ./
-COPY yarn.lock* ./
 
-# Instalar dependencias
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
-
-# Copiar el código fuente
+# This stage is used to build the service project
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["CRMSarritelFront/CRMSarritelFront.csproj", "CRMSarritelFront/"]
+RUN dotnet restore "./CRMSarritelFront/CRMSarritelFront.csproj"
 COPY . .
+WORKDIR "/src/CRMSarritelFront"
+RUN dotnet build "./CRMSarritelFront.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# Variables de entorno para la build (si tu frontend necesita la URL de la API)
-ARG API_BASE_URL=http://localhost:8080
-ENV VITE_API_URL=$API_BASE_URL
-ENV REACT_APP_API_URL=$API_BASE_URL
+# This stage is used to publish the service project to be copied to the final stage
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./CRMSarritelFront.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# Construir la aplicación para producción
-RUN npm run build
-
-# ================== PRODUCTION STAGE ==================
-FROM nginx:stable-alpine AS production
-
-# Instalar curl para healthcheck
-RUN apk add --no-cache curl
-
-# Crear directorio para Nginx
-WORKDIR /usr/share/nginx/html
-
-# Copiar archivos compilados desde builder
-COPY --from=builder /app/dist ./
-# Si tu build genera en otra carpeta (ej: build), ajusta la línea anterior:
-# COPY --from=builder /app/build ./
-
-# Copiar configuración personalizada de Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copiar script de entrada personalizado (opcional)
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
-# Verificar que los archivos se copiaron correctamente
-RUN ls -la /usr/share/nginx/html
-
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
-
-EXPOSE 80
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "CRMSarritelFront.dll"]

@@ -1,9 +1,6 @@
 # Exclude Blazor WASM client (it has its own build)
 CRMSarritelClient/
 
-# Exclude React frontend (it has its own build)
-CRMSarritelFront/
-
 # Exclude node_modules and build outputs
 node_modules/
 dist/

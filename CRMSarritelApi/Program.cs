@@ -73,14 +73,17 @@ string connectionString = "";
 try 
 {
     var currentDir = Directory.GetCurrentDirectory();
-    string[] pathsToTry = {
+    var envPaths = new[]
+    {
         Path.Combine(currentDir, ".ENV"),
         Path.Combine(currentDir, "CRMSarritelApi", ".ENV"),
         Path.Combine(currentDir, "..", ".ENV"),
-        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".ENV")
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".ENV"),
+        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", ".ENV"),
+        "C:\\Users\\German\\Desktop\\CRMSarritelSolution\\CRMSarritelSolution\\.ENV"
     };
 
-    string? envFilePath = pathsToTry.FirstOrDefault(File.Exists);
+    string? envFilePath = envPaths.FirstOrDefault(File.Exists);
 
     if (envFilePath != null)
     {
@@ -302,8 +305,7 @@ app.UseStaticFiles(new StaticFileOptions
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<CRMSarritelDbContext>();
-    // Fix existing products to be active
-    context.Database.ExecuteSqlRaw("UPDATE \"Productos\" SET \"Activo\" = true WHERE \"Activo\" = false AND \"FechaBaja\" IS NULL;");
+    // NOTE: Removed old Productos.Activo migration - table schema has changed
 }
 
 app.UseAuthentication();
