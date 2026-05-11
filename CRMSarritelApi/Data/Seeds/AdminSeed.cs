@@ -1,14 +1,13 @@
 using CRMSarritelApi.Models;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
-using Microsoft.AspNetCore.Identity;
 
 namespace CRMSarritelApi.Data.Seeds
 {
     public static class AdminSeed
     {
-        private static readonly PasswordHasher<Usuario> _passwordHasher = new PasswordHasher<Usuario>();
-        // Define a fixed seed date, e.g., when the application was first created or a known launch date
+        private static readonly string AdminPasswordHash = BCrypt.Net.BCrypt.HashPassword("admin");
+        private static readonly string SistemaPasswordHash = BCrypt.Net.BCrypt.HashPassword("crm_sarritel_system_secret_key_2024");
         private static readonly DateTime SeedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public static void Seed(ModelBuilder modelBuilder)
@@ -30,8 +29,7 @@ namespace CRMSarritelApi.Data.Seeds
                 Nombre = "Administrador",
                 Username = "admin",
                 Email = "admin@crmsarritel.com",
-                // Use standard PasswordHasher
-                PasswordHash = _passwordHasher.HashPassword(null!, "admin"),
+                PasswordHash = AdminPasswordHash,
                 FechaCreation = SeedDate
             };
 
@@ -41,7 +39,7 @@ namespace CRMSarritelApi.Data.Seeds
                 Nombre = "SISTEMA (Organización)",
                 Username = "sistema",
                 Email = "sistema@crmsarritel.com",
-                PasswordHash = _passwordHasher.HashPassword(null!, "crm_sarritel_system_secret_key_2024"),
+                PasswordHash = SistemaPasswordHash,
                 FechaCreation = SeedDate,
                 Activo = true
             };

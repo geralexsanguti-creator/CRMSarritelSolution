@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using CRMSarritelApi.Models;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using BCrypt.Net;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -334,7 +335,7 @@ await using (var scope = app.Services.CreateAsyncScope())
                 Email = "admin@sarritel.com",
                 Activo = true,
                 FechaCreation = DateTime.UtcNow,
-                PasswordHash = new Microsoft.AspNetCore.Identity.PasswordHasher<Usuario>().HashPassword(null!, "admin")
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin")
             };
             context.Usuarios.Add(adminUser);
             await context.SaveChangesAsync();
