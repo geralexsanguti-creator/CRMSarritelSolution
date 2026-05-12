@@ -1,11 +1,21 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: geralexsanguti/postgres:18
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=A*mma+t2026/*
+      - POSTGRES_DB=CRMSarritelDb
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    restart: unless-stopped
+
   api:
-    image: geralexsanguti/crm:latest
+    image: geralexsanguti/crmsarritelapi:latest
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - "ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=CRMSarritelDb;Username=postgres;Password=A*mma+t2026/*"
+      - ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=CRMSarritelDb;Username=postgres;Password=A*mma+t2026/*
       - Jwt__Key=OwrVqv5gN90gmIx5zrwbOLxPYgqazdZNFVTdoxwhFEZQnNp2u0sjCDeA4uUWNB0O
       - Jwt__Issuer=CRMSarritel
       - Jwt__Audience=CRMSarritelAudience
@@ -15,26 +25,15 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: geralexsanguti/crm-frontend:v3
+    image: geralexsanguti/crmsarritelfront:v4
     depends_on:
       - api
     restart: unless-stopped
 
-  postgres:
-    image: geralexsanguti/postgres:18
-    environment:
-      - POSTGRES_USER=postgres
-      - "POSTGRES_PASSWORD=A*mma+t2026/*"
-      - POSTGRES_DB=CRMSarritelDb
-    volumes:
-      - postgres-data:/var/lib/postgresql
-    restart: unless-stopped
-
   grafana:
-    image: grafana/grafana:latest
+    image: geralexsanguti/grafana:latest
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel
     volumes:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped
