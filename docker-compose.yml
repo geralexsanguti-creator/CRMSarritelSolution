@@ -3,9 +3,6 @@ version: '3.8'
 services:
   api:
     image: geralexsanguti/crm:latest
-    container_name: crmsarritel-api
-    ports:
-      - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=CRMSarritelDb;Username=postgres;Password=A*mma+t2026/*-
@@ -15,72 +12,33 @@ services:
       - Jwt__ExpirationHours=24
     depends_on:
       - postgres
-    networks:
-      - crm-network
     restart: unless-stopped
 
   frontend:
     image: geralexsanguti/crm-frontend:latest
-    container_name: crmsarritel-frontend
-    ports:
-      - "80:80"
     depends_on:
       - api
-    networks:
-      - crm-network
     restart: unless-stopped
 
   postgres:
     image: postgres:18-alpine
-    container_name: crmsarritel-db
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=A*mma+t2026/*
       - POSTGRES_DB=CRMSarritelDb
-    ports:
-      - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-    networks:
-      - crm-network
-    restart: unless-stopped
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: crmsarritel-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    networks:
-      - crm-network
+      - postgres-data:/var/lib/postgresql
     restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
-    container_name: crmsarritel-grafana
-    ports:
-      - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_INSTALL_PLUGINS=grafana-piechart-panel
     volumes:
       - grafana-data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    networks:
-      - crm-network
     restart: unless-stopped
-
-networks:
-  crm-network:
-    driver: bridge
 
 volumes:
   postgres-data:
-  prometheus-data:
   grafana-data:
