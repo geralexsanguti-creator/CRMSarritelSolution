@@ -5,7 +5,7 @@ services:
     image: geralexsanguti/crm:latest
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=CRMSarritelDb;Username=postgres;Password=A*mma+t2026/*
+      - "ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=CRMSarritelDb;Username=postgres;Password=A*mma+t2026/*"
       - Jwt__Key=OwrVqv5gN90gmIx5zrwbOLxPYgqazdZNFVTdoxwhFEZQnNp2u0sjCDeA4uUWNB0O
       - Jwt__Issuer=CRMSarritel
       - Jwt__Audience=CRMSarritelAudience
@@ -24,7 +24,7 @@ services:
     image: geralexsanguti/postgres:18
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=A*mma+t2026/*
+      - "POSTGRES_PASSWORD=A*mma+t2026/*"
       - POSTGRES_DB=CRMSarritelDb
     volumes:
       - postgres-data:/var/lib/postgresql
