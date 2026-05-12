@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: geralexsanguti/crm-frontend:latest
+    image: geralexsanguti/crm-frontend:v2
     depends_on:
       - api
     restart: unless-stopped
