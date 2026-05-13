@@ -270,9 +270,8 @@ namespace CRMSarritelApi.Data.Migrations
                 column: "PasswordHash",
                 value: "AQAAAAIAAYagAAAAEA0p+sF1vpuXNw2+WErqGUJlkpy9rHFeTn9FhZZjaA11lFQF579tRJZ8sQYYB3pFyQ==");
 
-            // --- Nuevos Permisos de Vista Global ---
-            migrationBuilder.Sql("INSERT INTO \"Permisos\" (\"Nombre\", \"Modulo\", \"Descripcion\") VALUES ('ventas:view_all', 'Ventas', 'Permite ver ventas de todos los usuarios');");
-            migrationBuilder.Sql("INSERT INTO \"Permisos\" (\"Nombre\", \"Modulo\", \"Descripcion\") VALUES ('comisiones:view_all', 'Comisiones', 'Permite ver comisiones de todos los usuarios');");
+            migrationBuilder.Sql("INSERT INTO \"Permisos\" (\"Nombre\", \"Modulo\", \"Descripcion\") VALUES ('ventas:view_all', 'Ventas', 'Permite ver ventas de todos los usuarios') ON CONFLICT DO NOTHING;");
+            migrationBuilder.Sql("INSERT INTO \"Permisos\" (\"Nombre\", \"Modulo\", \"Descripcion\") VALUES ('comisiones:view_all', 'Comisiones', 'Permite ver comisiones de todos los usuarios') ON CONFLICT DO NOTHING;");
 
             // --- Asignar a Administrador (RolId=1) ---
             migrationBuilder.Sql("INSERT INTO \"RolPermisos\" (\"RolId\", \"PermisoId\", \"FechaAsignacion\") SELECT 1, \"Id\", NOW() FROM \"Permisos\" WHERE \"Nombre\" IN ('ventas:view_all', 'comisiones:view_all');");
