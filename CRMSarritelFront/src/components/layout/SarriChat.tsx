@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import * as signalR from "@microsoft/signalr";
-import { cn } from "@/lib/utils";
+import { cn, BACKEND_URL } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Message {
@@ -30,7 +30,7 @@ export function SarriChat() {
   useEffect(() => {
     try {
       const newConnection = new signalR.HubConnectionBuilder()
-        .withUrl("http://localhost:5066/chatHub")
+        .withUrl(`${BACKEND_URL}/chatHub`)
         .withAutomaticReconnect()
         .build();
 

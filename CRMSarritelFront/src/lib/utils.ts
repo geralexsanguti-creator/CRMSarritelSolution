@@ -5,7 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const BACKEND_URL = "http://localhost:5066";
+const BACKEND_BASE = import.meta.env.VITE_API_URL || "http://localhost:5066/api";
+export const BACKEND_URL = BACKEND_BASE.replace(/\/api$/, "");
 
 export function getUploadUrl(filename: string | null | undefined): string {
     if (!filename || filename === "default.png" || filename.trim() === "") return "";

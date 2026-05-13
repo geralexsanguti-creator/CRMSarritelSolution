@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: geralexsanguti/postgres:18
@@ -10,25 +8,42 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql
     restart: unless-stopped
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   api:
     image: geralexsanguti/crmsarritelapi:latest
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__CRMSarritelConnection=Host=postgres;Port=5432;Database=CRMSarritelDb;Username=postgres;Password=A*mma+t2026/*
+      - ConnectionStrings__CRMSarritelConnection=Host=localhost;Port=5432;Database=CRMSarritelDb;Username=postgres;Password=A*mma+t2026/*
       - Jwt__Key=OwrVqv5gN90gmIx5zrwbOLxPYgqazdZNFVTdoxwhFEZQnNp2u0sjCDeA4uUWNB0O
       - Jwt__Issuer=CRMSarritel
       - Jwt__Audience=CRMSarritelAudience
       - Jwt__ExpirationHours=24
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 0"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   frontend:
-    image: geralexsanguti/crmsarritelfront:v4
+    image: geralexsanguti/crmsarritelfront:v5
     depends_on:
-      - api
+      api:
+        condition: service_started
     restart: unless-stopped
+    network_mode: host
 
   grafana:
     image: geralexsanguti/grafana:latest
@@ -37,6 +52,13 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
     restart: unless-stopped
+    network_mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   postgres-data:

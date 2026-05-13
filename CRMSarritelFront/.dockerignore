@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+.env.local
+.env.development
+src
+*.md
+tailwind.config.ts
+tsconfig.json
+vite.config.ts
+package.json
+package-lock.json
